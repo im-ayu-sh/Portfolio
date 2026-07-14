@@ -1,0 +1,2875 @@
+@font-face {
+    font-family: 'AssassinFont';
+    src: url('font/Assassin$.ttf') format('truetype'); 
+}
+
+:root {
+    /* AC1 Bright Palette */
+    --ac1-white: #f4f7f6;
+    --ac1-light-gray: #dce3e8;
+    --ac1-blue: rgb(163, 186, 207);
+    --ac1-dark: #1a2530; 
+    --ac1-red: #9e2a2b;
+    
+    --font-main: 'Rajdhani', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4,4 L10,24 L14,16 L22,12 Z" fill="rgba(255,255,255,0.8)" stroke="%231a2530" stroke-width="1.5"/></svg>'), auto;
+    background-color: var(--ac1-white);
+    color: var(--ac1-dark);
+    font-family: var(--font-main);
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+}
+
+.bg-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: radial-gradient(circle at center, #263746 0%, #0d151c 50%, #05080a 100%);
+    overflow: hidden;
+}
+
+.bg-animation::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;    
+    height: 100%;
+    left: -50%;   
+    
+    background-image: 
+        linear-gradient(rgba(163, 186, 207, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(163, 186, 207, 0.2) 1px, transparent 1px);
+    background-size: 60px 60px;
+    
+
+    transform: perspective(600px) rotateX(60deg) scale(2);
+    transform-origin: center top;
+    
+
+    filter: blur(1.5px); 
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 80%);
+    
+    animation: moveGrid 15s linear infinite;
+    pointer-events: none;
+}
+
+
+@keyframes moveGrid {
+    0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+    100% { transform: perspective(500px) rotateX(60deg) translateY(60px); }
+}
+
+.ac-title {
+    font-family: 'AssassinFont', sans-serif;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    line-height: 1.2;
+    text-align: center;
+    color: var(--ac1-dark);
+    margin-top: 0.5rem;
+}
+
+.big-char {
+    font-size: 1.5em;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+/* --- VIDEO BACKGROUND --- */
+#video-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1; 
+    opacity: 1;
+    transition: opacity 1.5s ease-in-out;
+}
+
+#video-bg-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#animus-bg-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.45); 
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* --- SPA SMOOTH CROSSFADE TRANSITIONS --- */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex; 
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(0) scale(0.98);
+    transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+                transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+                visibility 0.6s;
+    z-index: 10;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0) scale(1);
+    z-index: 10;
+}
+
+/* --- 1. BOOT SCREEN --- */
+.ac1-intro-bg {
+    background: radial-gradient(circle at center, #ffffff 0%, var(--ac1-light-gray) 50%, var(--ac1-blue) 100%);
+    z-index: 20;
+}
+
+.chemical-structures {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(var(--ac1-blue) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.4;
+    z-index: -1;
+}
+
+.loading-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1rem;
+    width: 100%;
+}
+
+.custom-logo {
+    width: clamp(90px, 15vw, 140px);
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.2));
+}
+
+.ac-subtitle {
+    /* Fluid typography and spacing */
+    font-size: clamp(1.2rem, 5vw, 3.5rem);
+    letter-spacing: clamp(5px, 2vw, 25px);
+    color: var(--ac1-red);
+    position: relative;
+    bottom: clamp(10px, 3vw, 40px);
+}
+
+.apostrophe {
+    font-size: 1.2em;
+    color: var(--ac1-red);
+}
+
+.blinking-text {
+    font-family: var(--font-mono);
+    margin-top: 2rem;
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
+    animation: blink 1.5s infinite;
+}
+
+.progress-stats {
+    margin-top: 2rem;
+    font-family: var(--font-mono);
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    color: var(--ac1-dark);
+    font-weight: 600;
+}
+
+/* --- 2. MENU SCREEN --- */
+.menu-content {
+    width: 100%;
+    max-width: 1200px;
+    padding: 2rem;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-header {
+    position: absolute;
+    left: 5%;
+    top: 20%;
+    color: var(--ac1-dark);
+}
+
+.menu-header h2 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-shadow: 0 4px 15px rgba(255,255,255,0.5);
+}
+
+.header-line {
+    width: 150%;
+    height: 3px;
+    background: var(--ac1-dark);
+    margin-top: 10px;
+}
+
+.nav-wrapper {
+    position: absolute;
+    right: 5%;
+    top: 35%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 2.5rem 3rem;
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--ac1-dark);
+    font-family: var(--font-mono);
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    font-weight: 600;
+    text-align: right;
+    padding: 8px 0;
+    transition: all 0.3s ease;
+}
+
+.menu-btn:hover:not(.disabled), .menu-btn.focused:not(.disabled) {
+    color: var(--ac1-red);
+    transform: translateX(-10px);
+}
+
+.menu-btn.disabled {
+    opacity: 0.4;
+}
+
+.menu-footer {
+    position: absolute;
+    bottom: 8%;
+    left: 5%;
+    font-family: var(--font-mono);
+    color: var(--ac1-dark);
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* =========================================
+   GAMEPLAY PREFERENCES & EASTER EGGS
+   ========================================= */
+
+/* Difficulty Description Text */
+.difficulty-desc {
+    font-size: 0.9rem;
+    color: var(--ac1-dark);
+    margin-top: 8px;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+body.abstergo-dark .difficulty-desc {
+    color: var(--ac1-dark);
+}
+/* Developer Subtitles (Director's Commentary) */
+.dev-subtitle {
+    display: none; /* Hidden by default */
+    background: rgba(0, 0, 0, 0.05);
+    border-left: 3px solid var(--ac1-red);
+    padding: 12px;
+    font-size: 0.95rem;
+    font-family: var(--font-mono);
+    margin-bottom: 1.5rem;
+    color: var(--ac1-dark);
+    border-radius: 0 4px 4px 0;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.dev-subtitle strong {
+    color: var(--ac1-red);
+    letter-spacing: 1px;
+}
+
+/* Ensure the dev note text adapts to the theme */
+.dev-subtitle span {
+    color: var(--ac1-dark);
+}
+
+/* Dark mode styling for subtitles */
+body.abstergo-dark .dev-subtitle {
+    background: rgba(0, 255, 204, 0.1);
+    border-left-color: var(--ac1-blue);
+    color: var(--ac1-white);
+}
+
+body.abstergo-dark .dev-subtitle strong {
+    color: var(--ac1-blue);
+}
+
+/* This class is activated by JS to reveal the tooltips */
+body.subtitles-active .dev-subtitle {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 3. PORTFOLIO SCREEN --- */
+#main-portfolio {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+    display: block;
+    overflow-y: auto;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    scroll-behavior: smooth; 
+    
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.portfolio-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.light-glass-panel {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    color: var(--ac1-dark);
+}
+
+.portfolio-header {
+    width: 100%;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    margin-bottom: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 6px solid var(--ac1-blue);
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.glitch-light {
+    font-size: clamp(1.8rem, 5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--ac1-dark);
+}
+
+.subtitle-light {
+    font-family: var(--font-mono);
+    color: var(--ac1-red);
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.portfolio-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    width: 100%;
+}
+
+.section-card { 
+    padding: clamp(1.5rem, 4vw, 2.5rem); 
+}
+.section-card.wide { 
+    grid-column: span 2; 
+}
+
+.section-card h3 {
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    margin-bottom: 1.5rem;
+    color: var(--ac1-dark);
+    border-bottom: 2px solid rgba(26, 37, 48, 0.1);
+    padding-bottom: 0.8rem;
+}
+
+.bracket-light {
+    color: var(--ac1-blue);
+    font-weight: 300;
+}
+
+.skills-list-light { 
+    list-style: none; 
+}
+.skills-list-light li {
+    font-family: var(--font-mono);
+    margin-bottom: 1.2rem;
+    padding-left: 1.8rem;
+    position: relative;
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    font-weight: 600;
+}
+.skills-list-light li::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    color: var(--ac1-red);
+    font-weight: bold;
+}
+
+.project-grid-light {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.project-item-light h4 {
+    margin-bottom: 1rem;
+    font-family: var(--font-mono);
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    color: var(--ac1-dark);
+}
+
+.project-item-light p {
+    font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+    color: var(--ac1-dark);
+    margin-bottom: 1.8rem;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* Primary Link (OPEN DETAILS) - Smooth Underline Sweep */
+.animus-link-light {
+    color: var(--ac1-red);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+    
+    /* FIXES FOR JUMPING BUG */
+    display: inline-flex; 
+    align-items: center;
+    line-height: 1; /* Strictly locks the vertical height of the text */
+    white-space: nowrap; /* Prevents the scrambled text from wrapping */
+    transform: translateZ(0); /* Forces GPU hardware acceleration to stop sub-pixel jumping */
+    
+    position: relative; 
+    transition: color 0.3s ease;
+}
+
+/* The expanding line */
+.animus-link-light::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px; 
+    bottom: -6px; /* Pushed down slightly to accommodate the locked line-height */
+    left: 0;
+    background-color: currentColor; 
+    transform: scaleX(0); 
+    transform-origin: bottom right; 
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+}
+
+/* Hover state triggers the line to draw */
+.animus-link-light:hover::after {
+    transform: scaleX(1); 
+    transform-origin: bottom left; 
+}
+
+/* Dark Mode support for the primary link */
+body.abstergo-dark .animus-link-light {
+    color: var(--ac1-blue);
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* =========================================
+   RESPONSIVE DESIGN (PC & MOBILE)
+   ========================================= */
+
+/* Tablets & Small Desktop */
+@media (max-width: 992px) {
+    .portfolio-content {
+        grid-template-columns: 1fr;
+    }
+    .section-card.wide { 
+        grid-column: span 1; 
+    }
+}
+
+/* Mobile Devices */
+@media (max-width: 768px) {
+    /* Menu Re-flow for Mobile */
+    .menu-content {
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .menu-header {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .header-line { 
+        width: 100%; 
+        margin: 10px auto;
+    }
+    
+    .nav-wrapper {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: 100%;
+        max-width: 350px;
+        padding: 2rem 1.5rem;
+        align-items: center;
+    }
+    
+    .menu-btn {
+        text-align: center;
+    }
+    
+    .menu-btn:hover:not(.disabled) {
+        transform: scale(1.05); /* Centered pop instead of shifting left */
+    }
+
+    .menu-footer {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    /* Adjust Portfolio Header for Mobile */
+    .portfolio-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+    
+    .project-grid-light {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Custom Cursor */
+a, button, .menu-btn, #btn-footer-select, input[type="submit"] {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4,4 L10,24 L14,16 L22,12 Z" fill="rgba(163,186,207,0.9)" stroke="%231a2530" stroke-width="1.5"/></svg>'), pointer !important;
+}
+
+.red-text {
+    color: var(--ac1-red);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+#btn-footer-select:hover .red-text {
+    text-shadow: 0 0 10px rgba(158, 42, 43, 0.6);
+    letter-spacing: 4px;
+}
+
+
+/* =========================================
+   OPTIONS & SYSTEM PREFERENCES
+   ========================================= */
+
+/* 1. Abstergo Dark Mode */
+body.abstergo-dark {
+    --ac1-white: #0a0f14;     /* Deep Abstergo dark */
+    --ac1-light-gray: #151e27;
+    --ac1-blue: #00ffcc;      /* Abstergo Cyan/Green */
+    --ac1-dark: #e0e6ed;      /* Light text for contrast */
+    --ac1-red: #ff3333;
+    --ac1-light-cyan: rgba(0, 255, 204, 0.2);    /* Bright alert red */
+}
+
+body.abstergo-dark .light-glass-panel {
+    background: rgba(10, 15, 20, 0.7);
+    border: 1px solid rgba(0, 255, 204, 0.3);
+}
+
+body.abstergo-dark .inner-glass {
+    background: rgba(21, 30, 39, 0.8);
+    border-color: rgba(0, 255, 204, 0.2);
+}
+
+body.abstergo-dark .inner-glass:hover {
+    border-color: var(--ac1-light-cyan);
+    background: rgba(21, 30, 39, 0.95);
+}
+
+/* --- Video Dark Mode Fix --- */
+body.abstergo-dark #animus-bg-video {
+    filter: invert(1) hue-rotate(180deg) brightness(0.8);
+    transition: filter 0.5s ease;
+}
+
+body.abstergo-dark .video-overlay {
+    background: rgba(10, 15, 20, 0.65); 
+}
+
+/* 2. HUD Scanlines */
+#scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.08) 50%);
+    background-size: 100% 4px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+#scanlines.active {
+    opacity: 1;
+}
+
+/* 3. Desynchronization (Glitch) */
+body.glitch-active .glitch-light {
+    animation: textGlitch 3s infinite;
+}
+
+@keyframes textGlitch {
+    0%, 96%, 98% { text-shadow: none; transform: none; }
+    97% { text-shadow: 2px 0 var(--ac1-red), -2px 0 var(--ac1-blue); transform: translateX(-2px); }
+    99% { text-shadow: -2px 0 var(--ac1-red), 2px 0 var(--ac1-blue); transform: translateX(2px); }
+    100% { text-shadow: none; transform: none; }
+}
+
+/* 4. Options Menu UI */
+.option-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid rgba(163, 186, 207, 0.3);
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-weight: 600;
+}
+
+.option-row:last-of-type {
+    border-bottom: none;
+}
+
+.toggle-btn {
+    background: transparent;
+    border: 1px solid var(--ac1-dark);
+    color: var(--ac1-dark);
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+}
+
+body.abstergo-dark .toggle-btn {
+    border-color: var(--ac1-blue);
+    color: var(--ac1-blue);
+}
+
+body.abstergo-dark .toggle-btn:hover {
+    background: var(--ac1-blue);
+    color: var(--ac1-white);
+}
+
+/* =========================================
+   FIX: ABSTERGO DARK MODE BOOT SCREEN
+   ========================================= */
+
+/* Light Mode Boot Gradient (Default) */
+.ac1-intro-bg {
+    background: radial-gradient(circle at center, #ffffff 0%, var(--ac1-light-gray) 50%, var(--ac1-blue) 100%);
+}
+
+body.abstergo-dark .ac1-intro-bg {
+    background: radial-gradient(circle at center, #263746 0%, #0d151c 50%, #05080a 100%);
+}
+
+body.abstergo-dark .chemical-structures {
+    background-image: radial-gradient(rgba(0, 255, 204, 0.08) 1px, transparent 1px);
+    opacity: 1;
+}
+
+body.abstergo-dark .ac-title {
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(0, 255, 204, 0.25);
+}
+
+body.abstergo-dark .custom-logo {
+    filter: drop-shadow(0 0 15px rgba(0, 255, 204, 0.15)) brightness(0.9);
+}
+
+/* =========================================
+   OPTIONS MENU GRID & MUSIC PLAYER
+   ========================================= */
+
+/* Side-by-Side Options Grid */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 3rem;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Portfolio Music Player */
+.music-player {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1rem 1.5rem !important; /* Overrides the heavy inner-glass padding */
+    min-width: 280px;
+}
+
+.music-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    color: var(--ac1-dark);
+    font-weight: 600;
+}
+
+body.abstergo-dark .music-header {
+    color: var(--ac1-blue);
+}
+
+.music-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.music-btn {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    border: none;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    border-radius: 2px;
+    cursor: pointer;
+    /* Click Animation */
+    transition: transform 0.1s ease, background-color 0.3s; 
+}
+
+.music-btn:active {
+    transform: scale(0.9);
+}
+
+body.abstergo-dark .music-btn {
+    background: var(--ac1-blue);
+    color: var(--ac1-dark);
+}
+
+/* Custom Volume Slider */
+.volume-slider {
+    flex-grow: 1;
+    cursor: pointer;
+    accent-color: var(--ac1-red);
+}
+
+body.abstergo-dark .volume-slider {
+    accent-color: var(--ac1-blue);
+}
+
+/* =========================================
+   ANIMUS BORDER GLOW TRACKING
+   ========================================= */
+
+/* Update your outer card to act as a stretching flex container */
+.animus-glow-card {
+    position: relative;
+    border-radius: 12px; 
+    isolation: isolate;
+    
+    /* NEW: Force the card to fill the grid height */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    
+    /* Default CSS Variables for Tracking */
+    --cursor-angle: 0deg;
+    --border-opacity: 0;
+    --glow-opacity: 0;
+    
+    /* Theme Colors for the Glow */
+    --glow-color-1: var(--ac1-red);
+    --glow-color-2: var(--ac1-red);
+    --glow-bg: var(--ac1-light-gray);
+}
+
+/* Abstergo Dark Mode Colors */
+body.abstergo-dark .animus-glow-card {
+    --glow-color-1: #00ffcc; /* Abstergo Cyan */
+    --glow-color-2: #00ffcc; /* Abstergo Red */
+    --glow-bg: var(--ac1-light-gray);
+}
+
+/* 1. Border Mesh Gradient Layer */
+.glow-border-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
+    border: 1px solid transparent;
+    background: 
+        linear-gradient(var(--glow-bg) 0 100%) padding-box,
+        radial-gradient(at 80% 55%, var(--glow-color-1) 0px, transparent 50%) border-box,
+        radial-gradient(at 8% 6%, var(--glow-color-2) 0px, transparent 50%) border-box,
+        linear-gradient(var(--glow-color-1) 0 100%) border-box;
+    opacity: var(--border-opacity);
+    mask-image: conic-gradient(from var(--cursor-angle) at center, black 25%, transparent 40%, transparent 60%, black 75%);
+    -webkit-mask-image: conic-gradient(from var(--cursor-angle) at center, black 25%, transparent 40%, transparent 60%, black 75%);
+    transition: opacity 0.3s ease-out;
+}
+
+/* 2. Soft Fill Layer Near Edges */
+.glow-fill-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
+    background: 
+        radial-gradient(at 80% 55%, var(--glow-color-1) 0px, transparent 50%),
+        radial-gradient(at 8% 6%, var(--glow-color-2) 0px, transparent 50%);
+    opacity: calc(var(--border-opacity) * 0.3); /* 30% fill opacity */
+    mix-blend-mode: soft-light;
+    mask-image: conic-gradient(from var(--cursor-angle) at center, transparent 5%, black 15%, black 85%, transparent 95%);
+    -webkit-mask-image: conic-gradient(from var(--cursor-angle) at center, transparent 5%, black 15%, black 85%, transparent 95%);
+    transition: opacity 0.3s ease-out;
+}
+
+/* 3. Outer Glow Cast */
+.glow-outer-layer {
+    position: absolute;
+    inset: -40px; /* glow radius */
+    border-radius: inherit;
+    z-index: -2;
+    pointer-events: none;
+    mask-image: conic-gradient(from var(--cursor-angle) at center, black 2.5%, transparent 10%, transparent 90%, black 97.5%);
+    -webkit-mask-image: conic-gradient(from var(--cursor-angle) at center, black 2.5%, transparent 10%, transparent 90%, black 97.5%);
+    opacity: var(--glow-opacity);
+    mix-blend-mode: plus-lighter;
+    transition: opacity 0.3s ease-out;
+}
+
+.glow-shadow {
+    position: absolute;
+    inset: 40px; /* matches inset above */
+    border-radius: inherit;
+    /* Layered Box Shadows to emulate React intensity calculations */
+    box-shadow: 
+        0 0 10px 2px var(--glow-color-1),
+        0 0 25px 5px var(--glow-color-2),
+        inset 0 0 10px 2px var(--glow-color-1);
+}
+
+/* Update your content wrapper to use Flexbox */
+.glow-content {
+    position: relative;
+    z-index: 10;
+    padding: clamp(1.5rem, 4vw, 2rem);
+    
+    /* NEW: Create a flex column that grows to fill the card */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; 
+}
+
+/* Your link class stays the same, but now it will actually work! */
+.project-links {
+    margin-top: auto; /* Pushes the link to the bottom of the flex column */
+    align-self: flex-start; 
+    padding-top: 1.5rem; 
+}
+
+
+/* =========================================
+   PORTFOLIO MODERN LAYOUT EXTENSION 
+   (DYNAMIC B/W/GREY THEME)
+   ========================================= */
+
+.modern-layout {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+}
+
+/* Common Typography & Layout */
+.font-mono { font-family: var(--font-mono); }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+.tracking-widest { letter-spacing: 0.2em; }
+.opacity-50 { opacity: 0.5; }
+.opacity-70 { opacity: 0.7; }
+.w-full { width: 100%; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+.mt-16 { margin-top: 4rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mb-10 { margin-bottom: 2.5rem; }
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.block { display: block; }
+.flex-between { display: flex; justify-content: space-between; align-items: flex-end; }
+.flex-col-between { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+.mt-auto { margin-top: auto; }
+
+/* Dynamic Section Labels */
+.section-label {
+    color: var(--ac1-dark);
+    opacity: 0.5;
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+body.abstergo-dark .section-label {
+    color: var(--ac1-dark);
+}
+
+.section-heading {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.1;
+    color: var(--ac1-dark);
+}
+
+/* Dynamic Section Borders */
+.modern-section {
+    padding: 6rem 0 2rem 0;
+    border-bottom: 1px solid rgba(26, 37, 48, 0.15); /* Light mode grey line */
+}
+body.abstergo-dark .modern-section {
+    border-bottom: 1px solid rgba(224, 230, 237, 0.15); /* Dark mode grey line */
+}
+.modern-section:last-of-type {
+    border-bottom: none;
+}
+
+/* UI Elements */
+.pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 50px;
+    text-decoration: none;
+    color: var(--ac1-dark);
+    transition: transform 0.3s ease;
+}
+.pill-btn:hover {
+    transform: translateY(-2px);
+}
+
+.download-btn {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    transition: all 0.2s;
+}
+
+.download-btn:hover {
+    opacity: 0.8;
+    transform: opacity;
+}
+
+body.abstergo-dark .download-btn {
+    background: var(--ac1-white);
+    color: var(--ac1-dark);
+    transition: all 0.2s;
+}
+
+body.abstergo-dark .download-btn:hover {
+    opacity: 0.8;
+    transform: opacity;
+}
+
+.init-live-btn {
+    display: flex !important; /* Overrides inline-flex so the margin trick works */
+    margin: 2rem auto 0 auto !important; /* Pushes it away from text and centers horizontally */
+    width: fit-content !important; /* Keeps the pill shape hugging the text */
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    opacity: 1;
+    transform: all 0.2s;
+}
+
+.init-live-btn:hover {
+    opacity: 0.8;
+    transform: opacity;
+}
+
+body.abstergo-dark .init-live-btn {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    transition: all 0.2s;
+}
+
+body.abstergo-dark .init-live-btn:hover {
+    opacity: 0.8;
+    transform: opacity;
+}
+
+.dot-accent {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--ac1-white); /* Kept red for accent */
+    display: inline-block;
+}
+body.abstergo-dark .dot-accent{
+    color: var(--ac1-dark);
+}
+
+/* Hero Section */
+.modern-hero {
+    position: relative;
+    padding-top: 2rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--ac1-dark);
+    margin-bottom: 4rem;
+    position: relative; /* Required for perfect centering */
+}
+/* Forces the left text and right badge to balance, perfectly centering your name */
+.hero-topbar > span:first-child {
+    flex: 1;
+    text-align: left;
+}
+
+.hero-topbar > span.tracking-widest {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.hero-topbar > div.status-badge {
+    margin-left: auto;
+}
+
+.status-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+}
+
+/* Dynamic Pulse Dot */
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--ac1-red);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+body.abstergo-dark .pulse-dot {
+    background: var(--ac1-blue);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(128, 128, 128, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(128, 128, 128, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(128, 128, 128, 0); }
+}
+
+.hero-center {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: auto;
+    margin-bottom: auto;
+    position: relative;
+    z-index: 2;
+}
+
+/* Dynamic Image Placeholders (Strict Grey) */
+.hero-image-wrapper {
+    width: 200px;
+    height: 250px;
+    margin: 0 auto -50px auto;
+    border-radius: 12px;
+    background: var(--ac1-light-gray);
+    border: 1px solid rgba(0,0,0,0.05);
+    z-index: -1;
+}
+body.abstergo-dark .hero-image-wrapper {
+    background: #111820; 
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.hero-title {
+    font-size: clamp(3rem, 8vw, 6rem);
+    margin: 0;
+    line-height: 1;
+}
+
+.hero-subtitle {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--ac1-dark);
+    margin-top: 1rem;
+    max-width: 600px;
+}
+
+.hero-nav {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    gap: 2rem;
+    padding: 8px 8px 8px 24px;
+    border-radius: 50px;
+    margin-top: 2.5rem;
+}
+
+.hero-nav a {
+    text-decoration: none;
+    color: var(--ac1-dark);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.hero-nav a:hover {
+    color: var(--ac1-red);
+}
+
+/* Dynamic Divider */
+.nav-divider {
+    width: 2px;
+    height: 20px;
+    background: var(--ac1-dark);
+    opacity: 0.2;
+}
+body.abstergo-dark .nav-divider {
+    background: var(--ac1-dark);
+}
+
+/* Dynamic Call To Action Button */
+.hero-nav .book-call {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    padding: 10px 24px;
+    border-radius: 50px;
+    transition: background 0.3s ease;
+}
+
+.hero-nav .book-call:hover {
+    color: var(--ac1-white);
+}
+
+body.abstergo-dark .hero-nav .book-call {
+    background: var(--ac1-white);
+    color: var(--ac1-dark);
+}
+
+/* Services */
+.section-header-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: end;
+}
+
+.service-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.service-card {
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+.service-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--ac1-dark);
+}
+
+.service-card p {
+    font-size: 0.95rem;
+    opacity: 0.8;
+}
+
+/* Features AI Scaling */
+.features-desc {
+    max-width: 300px;
+    text-align: right;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Makes all 3 cards equal width */
+    gap: 2rem;
+    margin-top: 3rem;
+    align-items: stretch; /* Forces all cards in the row to be the exact same height */
+    min-height: 380px; 
+}
+
+.feature-card-small {
+    padding: 2rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.glow-content.flex-col-between {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allows the content to fill the card */
+}
+
+.btn-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between; 
+    align-items: center; /* Locks vertical alignment */
+    margin-top: auto; 
+    padding-top: 1.5rem;
+    width: 100%;
+    border-top: 1px solid rgba(26, 37, 48, 0.1); 
+    gap: 1rem;
+    
+    /* FIX: Lock the height of the container so the border cannot jump */
+    min-height: 60px; 
+}
+
+body.abstergo-dark .btn-group {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Secondary Link ([ LIVE ]) - Soft Opacity Glow */
+.live-link-text {
+    font-family: var(--font-mono);
+    font-size: 0.85rem !important;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--ac1-dark) !important;
+    opacity: 0.5;
+    text-decoration: none;
+    transition: all 0.3s ease !important;
+}
+
+body.abstergo-dark .live-link-text {
+    color: var(--ac1-dark) !important;
+}
+
+.live-link-text:hover {
+    opacity: 1 !important;
+    color: var(--ac1-red) !important;
+    /* Adds a very subtle aesthetic glow instead of moving the text */
+    text-shadow: 0 0 10px rgba(158, 42, 43, 0.3) !important; 
+}
+
+body.abstergo-dark .live-link-text:hover {
+    color: var(--ac1-blue) !important;
+    /* Dark mode teal glow */
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.4) !important; 
+}
+
+.project-tech-stack span {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+.feature-card-small h3 {
+    font-size: 1.5rem;
+    color: var(--ac1-dark);
+}
+
+.feature-card-main {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background: var(--ac1-light-gray);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+body.abstergo-dark .feature-card-main {
+    background: #111820; 
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Testimonial */
+.testimonial-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+/* Dynamic Quote Graphic */
+.quote-graphic {
+    font-size: 15rem;
+    line-height: 0.8;
+    color: var(--ac1-dark);
+    opacity: 0.1;
+    font-family: serif;
+    text-align: right;
+}
+body.abstergo-dark .quote-graphic {
+    color: var(--ac1-white);
+    opacity: 0.1;
+}
+
+.quote-text {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    line-height: 1.4;
+    color: var(--ac1-dark);
+    font-weight: 300;
+}
+
+/* Pricing */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.pricing-card {
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card h3 {
+    font-size: 1.1rem;
+    margin: 1rem 0;
+    min-height: 40px;
+}
+
+.price {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--ac1-dark);
+}
+
+/* Dynamic Pricing Buttons */
+.pricing-btn {
+    border: 1px solid var(--ac1-dark);
+    background: transparent;
+    color: var(--ac1-dark);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+body.abstergo-dark .pricing-btn {
+    border-color: var(--ac1-white);
+    color: var(--ac1-white);
+}
+
+/* Highlighted Pro Button Override */
+.pro-card .pricing-btn {
+    background: var(--ac1-dark) !important;
+    color: var(--ac1-white) !important;
+}
+body.abstergo-dark .pro-card .pricing-btn {
+    background: var(--ac1-white) !important;
+    color: var(--ac1-dark) !important;
+}
+
+.pricing-features {
+    list-style: none;
+    padding: 0;
+}
+
+.pricing-features li {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Dynamic Feature List Dots */
+.check-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ac1-dark);
+}
+body.abstergo-dark .check-dot {
+    background: var(--ac1-white);
+}
+.check-dot.red {
+    background: var(--ac1-red); /* Keeps Red accent intact if used */
+}
+
+.scale-105 { transform: scale(1.05); z-index: 5; }
+
+/* Blogs */
+.slider-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ac1-dark);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    transition: all 0.3s ease; /* Enables the smooth hover */
+}
+
+/* New Hover States */
+.nav-dot:hover {
+    background: var(--ac1-blue);
+    color: var(--ac1-white);
+    transform: scale(1.1);
+}
+
+body.abstergo-dark .nav-dot:hover {
+    background: var(--ac1-blue);
+    color: var(--ac1-dark);
+}
+
+/* Dynamic Nav Dots */
+.nav-dot.active {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+}
+body.abstergo-dark .nav-dot.active {
+    background: var(--ac1-white);
+    color: var(--ac1-dark);
+}
+
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.blog-img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: 8px;
+    background: var(--ac1-light-gray);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+body.abstergo-dark .blog-img {
+    background: #111820;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Newsletter Arch */
+.newsletter-arch {
+    position: relative;
+    padding: 4rem 0 10rem 0;
+    overflow: hidden;
+}
+
+.subscribe-box {
+    display: inline-flex;
+    padding: 8px;
+    border-radius: 50px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    z-index: 2;
+}
+
+.subscribe-box input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    padding: 10px 20px;
+    color: var(--ac1-dark);
+    outline: none;
+}
+
+.subscribe-box input::placeholder {
+    color: var(--ac1-dark);
+    opacity: 0.5;
+}
+
+/* Dynamic Subscribe Button */
+.subscribe-btn {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    padding: 10px 24px;
+    border-radius: 50px;
+}
+body.abstergo-dark .subscribe-btn { 
+    background: var(--ac1-white); 
+    color: var(--ac1-dark); 
+}
+
+/* Dynamic Glowing Arch */
+.glowing-arch {
+    position: absolute;
+    bottom: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150%;
+    height: 100%;
+    border-radius: 50% 50% 0 0;
+    border-top: 4px solid var(--ac1-dark);
+    box-shadow: 0 -40px 100px -20px var(--ac1-dark);
+    opacity: 0.08;
+    pointer-events: none;
+}
+body.abstergo-dark .glowing-arch {
+    border-top-color: var(--ac1-white);
+    box-shadow: 0 -40px 100px -20px var(--ac1-white);
+    opacity: 0.05;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .section-header-split, .testimonial-layout { grid-template-columns: 1fr; gap: 2rem; }
+    .features-desc { text-align: left; max-width: 100%; margin-top: 1rem; }
+    .flex-between { flex-direction: column; align-items: flex-start; }
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+        height: auto;
+    }
+    .feature-card-main { height: 300px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .scale-105 { transform: scale(1); }
+    .blog-grid { grid-template-columns: repeat(2, 1fr); }
+    .hidden.md\:block { display: none; }
+    .hero-topbar { flex-direction: column; gap: 1rem; text-align: center; }
+}
+@media (max-width: 768px) {
+    .blog-grid { grid-template-columns: 1fr; }
+    .hero-nav { flex-direction: column; border-radius: 12px; padding: 1.5rem; }
+    .nav-divider { width: 100%; height: 2px; }
+    .features-grid {
+        grid-template-columns: 1fr; /* 1 column on phones */
+    }
+    .btn-group {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+
+/* =========================================
+   NEW HERO SPLIT LAYOUT & TYPEWRITER
+   ========================================= */
+.hero-split {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 4rem;
+    width: 100%;
+    
+    /* NEW: Forces perfect vertical centering inside the 100vh container */
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.hero-text-content {
+    flex: 1.2;
+    order: 1; 
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Spreads elements from top to bottom */
+    padding: 1rem 0; /* Slight padding so the text aligns perfectly with the inner photo */
+}
+
+.hero-image-content {
+    flex: 0.8;
+    order: 2; /* Right side on desktop */
+    display: flex;
+    justify-content: flex-end;
+}
+
+.hero-glass-card {
+    padding: 10px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 350px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out, box-shadow 0.3s ease-out;
+    will-change: transform;
+}
+
+.hero-glass-card.reset-tilt {
+    transition: transform 0.5s ease-out;
+    transform: perspective(1000px) rotateX(0deg) rotateY(0deg) !important;
+}
+
+.placeholder-photo {
+    width: 100%;
+    height: 100%;
+    background: url('ayush.webp') center/cover; 
+    border-radius: 12px;
+}
+
+.hero-desc {
+    font-size: 1.1rem;
+    color: var(--ac1-dark);
+    opacity: 0.8;
+    margin-top: 1rem;
+    max-width: 500px;
+}
+body.abstergo-dark .hero-desc { color: var(--ac1-dark); }
+
+.typewriter-container {
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+.text-red {
+    color: var(--ac1-red);
+}
+body.abstergo-dark .text-red {
+    color: var(--ac1-blue);
+}
+
+.blinking-cursor {
+    font-weight: bold;
+    color: var(--ac1-red);
+    animation: blink 1s step-end infinite;
+}
+body.abstergo-dark .blinking-cursor { color: var(--ac1-blue); }
+
+body.abstergo-dark .sublink.decrypt-text:hover {
+    color: var(--ac1-blue);
+}
+
+/* =========================================
+   SKILLS MARQUEE
+   ========================================= */
+.skills-marquee {
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 2rem 0; 
+    margin: 3rem 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background: transparent !important; 
+    border: solid 2px var(--ac1-light-gray);
+    box-shadow: none !important;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+/* Abstergo Dark Mode Background Adjustments */
+body.abstergo-dark .skills-marquee {
+    background: rgba(255, 255, 255, 0.02);
+    border: solid 2px var(--ac1-light-gray);
+}
+
+.marquee-content {
+    display: flex;
+    gap: 2rem; 
+    width: max-content; 
+    font-weight: 800;
+    
+    /* Smaller, sleek font size for both mobile and PC */
+    font-size: clamp(1.6rem, 1.5vw, 1.2rem); 
+    letter-spacing: 2px;
+    color: var(--ac1-dark);
+    opacity: 0.6; /* Slightly transparent text for a premium look */
+}
+
+body.abstergo-dark .marquee-content {
+    color: var(--ac1-dark);
+}
+
+.marquee-content span { 
+    padding-right: 4rem; 
+}
+
+@keyframes scroll-marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* Shifts exactly half so it loops */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   CONTACT FORM & UTILS (UPDATED FIXES)
+   ========================================= */
+.p-8 { padding: 2rem; }
+.rounded-lg { border-radius: 12px; }
+.leading-relaxed { line-height: 1.8; }
+.text-lg { font-size: 1.125rem; }
+
+.contact-form {
+    padding: 3rem;
+    border-radius: 16px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.7;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4,4 L10,24 L14,16 L22,12 Z" fill="rgba(255,255,255,0.8)" stroke="%231a2530" stroke-width="1.5"/></svg>'), auto !important;
+}
+
+.input-group input, .input-group textarea {
+    background: transparent;
+    border: 1px solid rgba(26, 37, 48, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    color: var(--ac1-dark);
+    font-family: var(--font-main);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+    resize: vertical;
+    
+    /* FIX: Force custom cursor on text inputs */
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4,4 L10,24 L14,16 L22,12 Z" fill="rgba(255,255,255,0.8)" stroke="%231a2530" stroke-width="1.5"/></svg>'), auto !important;
+}
+
+.input-group input:focus, .input-group textarea:focus {
+    border-color: var(--ac1-red);
+}
+
+body.abstergo-dark .input-group input, 
+body.abstergo-dark .input-group textarea {
+    color: var(--ac1-dark);
+    border-color: rgba(224, 230, 237, 0.2);
+}
+
+body.abstergo-dark .input-group input:focus, 
+body.abstergo-dark .input-group textarea:focus {
+    border-color: var(--ac1-blue);
+}
+
+/* =========================================
+   SEND TRANSMISSION BUTTON STYLES
+   ========================================= */
+/* Base Button Styles (Defaults to Light Mode aesthetics) */
+.contact-form button[type="submit"] {
+    --btn-bg: var(--ac1-dark, #121212);
+    --btn-text: var(--ac1-white, #ffffff);
+    --btn-border: var(--ac1-dark, #121212);
+    --accent-glow: var(--ac1-red, #d92d20); /* Red accent for light mode */
+    
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid var(--btn-border);
+    border-radius: 9999px; /* Pill shape to match nav buttons */
+    padding: 12px 32px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: fit-content; 
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    
+    /* FIX: Apply interactive custom cursor */
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4,4 L10,24 L14,16 L22,12 Z" fill="rgba(163,186,207,0.9)" stroke="%231a2530" stroke-width="1.5"/></svg>'), pointer !important;
+}
+
+/* The glowing dot accent inside the button */
+.contact-form button[type="submit"] .dot-accent {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--accent-glow);
+    box-shadow: 0 0 8px var(--accent-glow);
+    transition: all 0.3s ease;
+}
+
+/* Light Mode Hover State */
+.contact-form button[type="submit"]:hover {
+    background: transparent;
+    color: var(--btn-bg);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+
+
+
+
+
+/* .contact-form button[type="submit"] {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    border: 1px solid var(--ac1-dark);
+    padding: 12px 24px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    width: fit-content; 
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    justify-content: center;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4,4 L10,24 L14,16 L22,12 Z" fill="rgba(163,186,207,0.9)" stroke="%231a2530" stroke-width="1.5"/></svg>'), pointer !important;
+}
+
+.contact-form button[type="submit"]:hover {
+    background: var(--ac1-light-gray);
+    color: var(--ac1-red);
+    border-color: var(--ac1-red);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(163, 186, 207, 0.4);
+} */
+
+body.abstergo-dark .contact-form button[type="submit"] {
+    --btn-bg: rgba(255, 255, 255, 0.03); /* Subtle glass effect */
+        --btn-text: #ffffff;
+        --btn-border: rgba(255, 255, 255, 0.1);
+        --accent-glow: #00ffcc; /* Teal accent matching your dark mode hero text */
+        
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    /* background: var(--ac1-white);
+    color: var(--ac1-dark);
+    border-color: var(--ac1-white); */
+}
+
+body.abstergo-dark .contact-form button[type="submit"]:hover {
+    background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent-glow);
+        color: #ffffff;
+        box-shadow: 0 8px 25px rgba(0, 255, 204, 0.15);
+    /* background: var(--ac1-blue);
+    color: var(--ac1-dark);
+    border-color: var(--ac1-blue);
+    box-shadow: 0 10px 20px rgba(0, 255, 204, 0.3);*/
+} 
+
+/* =========================================
+   SOCIAL MEDIA ICONS
+   ========================================= */
+.social-links {
+    display: flex;
+    gap: 1.2rem;
+    margin-top: 1.5rem; /* Adds space between the nav bar and icons */
+}
+
+.social-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; /* Makes the glass panels perfectly circular */
+    color: var(--ac1-dark);
+    text-decoration: none;
+    transition: transform 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    
+    /* Applies the custom gaming cursor */
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M4,4 L10,24 L14,16 L22,12 Z" fill="rgba(163,186,207,0.9)" stroke="%231a2530" stroke-width="1.5"/></svg>'), pointer !important;
+}
+
+.social-icon:hover {
+    transform: translateY(-4px) scale(1.05); /* Slight pop upwards on hover */
+    color: var(--ac1-red); 
+    border-color: var(--ac1-red);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 
+                0 0 15px rgba(163, 186, 207, 0.4);
+}
+
+/* Abstergo Dark Mode Colors */
+body.abstergo-dark .social-icon {
+    color: var(--ac1-dark);
+}
+
+body.abstergo-dark .social-icon:hover {
+    color: var(--ac1-blue);
+    border-color: var(--ac1-blue);
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+   ========================================= */
+@media (max-width: 900px) {
+    .hero-split {
+        flex-direction: column; /* Stacks them */
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .hero-text-content {
+        order: 2; /* Forces text to the bottom */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .hero-image-content {
+        order: 1; /* Forces image to the top */
+        justify-content: center;
+        width: 100%;
+    }
+
+    .hero-nav {
+        justify-content: center;
+        flex-wrap: wrap;
+        width: fit-content; 
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-topbar {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Creates exactly two columns */
+        align-items: center;
+        gap: 1.5rem;
+        width: 100%;
+    }
+    
+    .hero-topbar > span:first-child {
+        text-align: left;
+        flex: unset; /* Resets the PC flex rules */
+    }
+    
+    .hero-topbar > span.tracking-widest {
+        position: relative; /* Breaks it out of absolute centering */
+        left: auto;
+        transform: none;
+        text-align: right; /* Pushes 'PORTFOLIO' to the right edge */
+    }
+    
+    .hero-topbar > div.status-badge {
+        grid-column: 1 / -1; /* Forces the badge to span across the entire next row */
+        margin: 0 auto; /* Centers the badge horizontally */
+    }
+
+    .social-links {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =============================          useless       ===================================  */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   FLOATING MICRO-DOCK (CENTERED)
+   ========================================= */
+
+/* The Dock Container */
+.floating-control-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 9999px;
+    z-index: 9999;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    
+    /* FIX: Hide the bar by default */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth fade-in */
+}
+
+/* FIX: MAGIC TRICK - Only show the bar if the body has an active main-portfolio inside it */
+body:has(#main-portfolio.active) .floating-control-bar {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Dark Mode Dock Overrides */
+body.abstergo-dark .floating-control-bar {
+    background: rgba(15, 20, 25, 0.65); /* Darker glass for contrast */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Individual Dock Buttons */
+.float-btn {
+    position: relative;
+    width: 36px;               /* Very small footprint */
+    height: 36px;
+    border-radius: 50%;
+    border: none;              /* Removed heavy borders for a cleaner look */
+    
+    /* Light mode default button colors */
+    background: rgba(0, 0, 0, 0.03); 
+    color: var(--ac1-dark);    /* Ensure icons are dark in light mode */
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    
+    /* Custom physics for the Mac-style dock pop */
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                background 0.3s ease, 
+                color 0.3s ease;
+}
+
+/* Dark Mode Button Overrides */
+body.abstergo-dark .float-btn {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--ac1-dark);   /* FIX: Forces icons to be white so you can actually see them! */
+}
+
+/* The Icons inside the buttons */
+.float-btn svg {
+    width: 16px;               /* Scaled down icons */
+    height: 16px;
+    stroke-width: 2.2px;       /* Slightly thicker lines for visibility at small sizes */
+}
+
+/* Hover States (The App Dock Pop) */
+.float-btn:hover {
+    transform: translateY(-6px) scale(1.15); /* Pops up and grows slightly */
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+}
+
+body.abstergo-dark .float-btn:hover {
+    background: var(--ac1-blue); /* Your dark mode teal accent */
+    color: var(--ac1-white);      /* Dark icon on teal background */
+    box-shadow: 0 4px 15px rgba(0, 255, 204, 0.3); /* Subtle glow */
+}
+
+/* Tooltips */
+.float-tooltip {
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px) scale(0.9);
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+}
+
+.float-btn:hover .float-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* Mobile Responsiveness (Extra Tiny) */
+@media (max-width: 768px) {
+    .floating-control-bar {
+        bottom: 16px;          /* Pushed slightly lower to save screen space */
+        gap: 4px;              
+        padding: 4px 6px;      /* Ultra thin container */
+    }
+
+    .float-btn {
+        width: 32px;           /* Even smaller on mobile */
+        height: 32px;
+    }
+    
+    .float-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .float-btn:hover {
+        transform: scale(1.05); /* Less extreme pop on mobile touch */
+    }
+    
+    .float-tooltip {
+        display: none;         /* Hide tooltips on touch devices */
+    }
+}
+
+
+
+
+
+
+
+/* =========================================
+   BACK TO TOP BUTTON (INSIDE DOCK)
+   ========================================= */
+.btt-in-dock {
+    /* 1. Collapse the button completely */
+    width: 0 !important;
+    height: 36px;
+    padding: 0 !important;
+    border: none !important;
+    
+    /* 2. THE MAGIC FIX: Swallow the 6px flex gap from the parent */
+    margin: 0 0 0 -6px !important; 
+    
+    /* 3. Hide it visually and functionally */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    overflow: hidden;
+    
+    /* 4. Smooth, aesthetic scaling animation (Shrinks to center) */
+    transform: scale(0.3);
+    transform-origin: center;
+    
+    /* 5. Buttery smooth transition for everything */
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* When JS adds the .show class, it smoothly expands into the dock */
+.btt-in-dock.show {
+    width: 36px !important;
+    margin: 0 !important; /* Resets the margin so the gap returns to normal */
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: scale(1);
+    overflow: visible !important;
+}
+
+/* Specific Hover effect for the Top button so it pops correctly */
+.btt-in-dock.show:hover {
+    transform: translateY(-6px) scale(1.15) !important;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .btt-in-dock { 
+        height: 32px; 
+        /* The gap is only 4px on mobile, so we swallow 4px here */
+        margin: 0 0 0 -4px !important; 
+    }
+    .btt-in-dock.show { 
+        width: 32px !important; 
+        margin: 0 !important; 
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   FLOATING MUSIC MODAL 
+   ========================================= */
+.music-modal-container {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* FIX: Swapped opacity for visibility to prevent nested-fade bugs */
+    visibility: hidden; 
+    pointer-events: none;
+    transition: visibility 0.3s;
+}
+
+.music-modal-container.active {
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Base Utility for JS Toggling */
+.music-modal-container .hidden, 
+.music-card-content .hidden {
+    display: none !important;
+}
+
+.music-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    
+    /* FIX: Added starting opacity, transition, and hardware acceleration */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    transform: translateZ(0); /* Stops the blur intensity jump */
+}
+
+.music-modal-container.active .music-backdrop {
+    opacity: 1;
+}
+
+body.abstergo-dark .music-backdrop {
+    background: rgba(10, 15, 20, 0.6); 
+}
+
+body.abstergo-dark .music-modal-container.active .music-backdrop {
+    background: rgba(10, 15, 20, 0.6);
+}
+
+.music-card {
+    position: relative;
+    z-index: 10;
+    width: 90%;
+    max-width: 380px;
+    padding: 2rem;
+    
+    /* FIX: Added starting opacity here so the card fades smoothly too */
+    opacity: 0; 
+    transform: scale(0.95);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.music-modal-container.active .music-card {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    background: transparent;
+    border: none;
+    color: var(--ac1-dark);
+    opacity: 0.6;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.close-modal-btn:hover {
+    opacity: 1;
+    color: var(--ac1-red);
+    transform: scale(1.1);
+}
+
+body.abstergo-dark .close-modal-btn { color: var(--ac1-dark); }
+body.abstergo-dark .close-modal-btn:hover { color: var(--ac1-blue); }
+
+.music-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.music-cover-art {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ac1-light-gray), var(--ac1-blue));
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.1);
+    color: var(--ac1-dark);
+    opacity: 0.5;
+}
+
+body.abstergo-dark .music-cover-art {
+    background: linear-gradient(135deg, #151e27, var(--ac1-blue));
+    color: var(--ac1-dark);
+}
+
+.music-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.25rem;
+}
+
+.music-subtitle {
+    font-size: 0.85rem;
+    color: var(--ac1-dark);
+    opacity: 0.7;
+    margin-bottom: 2rem;
+}
+body.abstergo-dark .music-subtitle { color: var(--ac1-dark); }
+
+.music-playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.playback-btn {
+    background: transparent;
+    border: none;
+    color: var(--ac1-dark);
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.2s;
+}
+
+.playback-btn:hover {
+    color: var(--ac1-red);
+    transform: scale(1.1);
+}
+
+body.abstergo-dark .playback-btn { color: var(--ac1-dark); }
+body.abstergo-dark .playback-btn:hover { color: var(--ac1-blue); }
+
+.play-pause-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease, background 0.3s;
+}
+
+.play-pause-btn:hover {
+    transform: scale(1.05);
+    background: var(--ac1-red);
+}
+
+body.abstergo-dark .play-pause-btn {
+    background: var(--ac1-dark);
+    color: var(--ac1-white);
+}
+body.abstergo-dark .play-pause-btn:hover {
+    background: var(--ac1-blue);
+    box-shadow: 0 4px 15px rgba(0, 255, 204, 0.4);
+}
+
+.music-volume-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    color: var(--ac1-dark);
+}
+
+body.abstergo-dark .music-volume-control { color: var(--ac1-dark); }
+
+/* Custom Dynamic Range Slider */
+.modal-vol-slider {
+    -webkit-appearance: none;
+    flex-grow: 1;
+    height: 6px;
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    
+    /* Colors for Light Mode */
+    --track-fill: var(--ac1-dark);         /* Left side fill (Dark to match thumb) */
+    --track-bg: rgba(26, 37, 48, 0.15);    /* Right side empty (Grey) */
+    background: var(--track-bg);
+}
+
+/* Dark Mode Track Override */
+/* body.abstergo-dark .modal-vol-slider {
+    --track-bg: rgba(255, 255, 255, 0.15); 
+    background: var(--track-bg);
+} */
+
+.modal-vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 14px;
+    width: 14px;
+    border-radius: 50%;
+    background: var(--track-fill);         /* Uses the exact same color as the left track */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-vol-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+}
+
+body.abstergo-dark .modal-vol-slider {
+    /* Colors for Dark Mode */
+    --track-fill: #ffffff;                 /* Left side fill (Pure White) */
+    --track-bg: rgba(255, 255, 255, 0.2);  /* Right side empty (Translucent Grey) */
+    background: var(--track-bg);
+}
+
+/* 2. Dark Mode (Abstergo) Overrides */
+body.abstergo-dark .modal-vol-slider::-webkit-slider-thumb {
+    /* Uses your cyan/teal accent for dark mode */
+    background: var(--ac1-dark); 
+    /* Adds a subtle neon glow to match the Abstergo aesthetic */
+    box-shadow: 0 0 10px rgba(225, 255, 225, 0.5); 
+}
+
+body.abstergo-dark .modal-vol-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 15px rgba(225, 255, 225, 0.8); 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   ANIMUS HUD SYSTEM FOOTER (REDESIGN)
+   ========================================= */
+.hud-footer {
+    width: 100%;
+    padding: 2rem 0; 
+    position: relative;
+    z-index: 10;
+    margin-top: 5rem; 
+    margin-bottom: 5rem; /* Gives space for the floating dock at the bottom */
+}
+
+/* Glass panel made bigger, floating, with rounded aesthetic edges */
+.hud-footer-glass {
+    position: relative;
+    padding: 1.8rem 3rem; /* Increased size for a bigger feel */
+    border-radius: 16px; /* Matches the beautiful rounded cards above it */
+    overflow: hidden; 
+    /* Removed the harsh bottom border to rely on the natural glassmorphism */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Ambient Background Water Drop (Ripple) */
+.hud-scanline {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    
+    /* Make it a perfect circle large enough to cover the entire footer */
+    width: 2000px; 
+    height: 2000px;
+    border-radius: 50%;
+    
+    /* Soft ripple gradient (Lowered intensity to 0.08) */
+    background: radial-gradient(circle, 
+        transparent 35%, 
+        rgba(158, 42, 43, 0.08) 50%, 
+        transparent 65%
+    );
+    
+    /* 5-second total animation loop */
+    animation: hud-water-drop 5s ease-out infinite;
+    
+    pointer-events: none;
+    z-index: 0;
+}
+
+body.abstergo-dark .hud-scanline {
+    /* Abstergo Cyan ripple for dark mode */
+    background: radial-gradient(circle, 
+        transparent 35%, 
+        rgba(0, 255, 204, 0.08) 50%, 
+        transparent 65%
+    );
+}
+
+@keyframes hud-water-drop {
+    0% { 
+        /* Starts as a tiny drop exactly in the center */
+        transform: translate(-50%, -50%) scale(0); 
+        opacity: 1; 
+    }
+    50% { 
+        /* Slowly ripples outwards to fill the container over 2.5 seconds */
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 0; /* Gently fades to invisible as it reaches the edges */
+    }
+    100% { 
+        /* The remaining 2.5 seconds acts as a quiet interval before the next drop */
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 0; 
+    }
+}
+
+/* Keeps the text above the glow */
+.hud-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1; 
+}
+
+.hud-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem; 
+    opacity: 0.85;
+}
+
+.left-hud { justify-content: flex-start; }
+.center-hud { justify-content: center; opacity: 0.6; transition: opacity 0.3s ease; }
+.right-hud { justify-content: flex-end; }
+
+.center-hud:hover { opacity: 1; } 
+
+/* Floating Pill Status Box */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(5px);
+    padding: 8px 16px;
+    border-radius: 50px; /* Pill shape matches your main buttons */
+    border: 1px solid rgba(26, 37, 48, 0.1);
+}
+
+body.abstergo-dark .status-indicator {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.status-text, .signature-text {
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+.copyright-text {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+/* Subtle glow for the "Passion" text */
+.hud-glint {
+    text-shadow: 0 0 8px rgba(158, 42, 43, 0.4);
+}
+body.abstergo-dark .hud-glint {
+    text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+}
+
+/* =========================================
+   MOBILE HUD FOOTER RESPONSIVENESS
+   ========================================= */
+@media (max-width: 900px) {
+    .hud-container {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .hud-section {
+        justify-content: center;
+    }
+    
+    .hud-footer-glass {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .center-hud {
+        order: 3; /* Pushes copyright text to the bottom */
+        margin-top: 1rem;
+    }
+    
+    .right-hud {
+        order: 2; 
+    }
+}
